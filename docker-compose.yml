@@ -12,12 +12,12 @@ services:
         - 443:443
         volumes:
         - /var/run/docker.sock:/var/run/docker.sock
-        - data:/data
+        - rproxy_data:/data
         networks:
         - rproxy
 
 volumes:
-    data:
+    rproxy_data:
 
 networks:
     rproxy:

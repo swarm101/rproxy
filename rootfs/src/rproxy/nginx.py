@@ -1,12 +1,29 @@
 import logging
 import os
 import subprocess
+import threading
 
 import jinja2
 
 NGINX_PATH = "/etc/nginx/http.d"
 
 jinja = jinja2.Environment(loader=jinja2.FileSystemLoader("/etc/rproxy/templates/"))
+
+nginx_controller = {
+        "thread": None, "state": "running"}
+
+def stop():
+    nginx_controller["state"] = "stop"
+
+    try:
+        rc = subprocess.call(["nginx", "-s", "stop"])
+        assert rc == 0, "invalid return code {rc}".format(rc=rc)
+        logging.info("nginx fail to stop!")
+    except Exception as e:
+        logging.error("cannot stop nginx: {e}".format(e=e))
+
+    if nginx_controller["thread"]:
+        nginx_controller["thread"].join()
 
 def reload():
     try:
@@ -18,15 +35,22 @@ def reload():
         logging.error("cannot reload nginx: {e}".format(e=e))
         return False
 
+def _start(controller):
+    controller["state"] = "running"
+    while controller["state"] == "running":
+        try:
+            rc = subprocess.call(["nginx"])
+            assert rc == 0, "invalid return code {rc}".format(rc=rc)
+            logging.info("nginx started!")
+            #return True
+        except Exception as e:
+            logging.error("cannot start nginx: {e}".format(e=e))
+            #return False
+
 def start():
-    try:
-        rc = subprocess.call(["nginx"])
-        assert rc == 0, "invalid return code {rc}".format(rc=rc)
-        logging.info("nginx started!")
-        return True
-    except Exception as e:
-        logging.error("cannot start nginx: {e}".format(e=e))
-        return False
+    nginx_controller["thread"] = threading.Thread(
+        target=_start, args=(nginx_controller,))
+    nginx_controller["thread"].start()
 
 def certbot(service):
     command = [

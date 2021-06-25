@@ -145,9 +145,14 @@ def service_remove(docker, event):
 
 def main():
     rproxy.nginx.start()
-    rproxy.docker.watch(
-        service_create=service_create,
-        service_update=service_update,
-        service_remove=service_remove)
+
+    try:
+        rproxy.docker.watch(
+            service_create=service_create,
+            service_update=service_update,
+            service_remove=service_remove)
+    except Exception as e:
+        rproxy.nginx.stop()
+        raise e
 
 main()
