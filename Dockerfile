@@ -8,6 +8,8 @@ RUN rm -rf /etc/nginx /etc/letsencrypt; \
 	ln -s /data/etc/nginx/ /etc/; \
 	ln -s /data/etc/rproxy/ /etc/; \
 	ln -s /data/etc/letsencrypt/ /etc/; \
+        mkdir -p /upgrade/; \
+        cp -R /data/* /upgrade/; \
 	pip install /src && rm -rf /src
 
 VOLUME [ "/data/" ]

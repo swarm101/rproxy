@@ -2,6 +2,7 @@ import logging
 import os
 import subprocess
 import threading
+import time
 
 import jinja2
 
@@ -45,6 +46,7 @@ def _start(controller):
             #return True
         except Exception as e:
             logging.error("cannot start nginx: {e}".format(e=e))
+            time.sleep(10)
             #return False
 
 def start():
@@ -52,6 +54,7 @@ def start():
         target=_start, args=(nginx_controller,))
     nginx_controller["thread"].start()
 
+certbot_lock =  threading.RLock()
 def certbot(service):
     command = [
         "certbot",
@@ -63,13 +66,16 @@ def certbot(service):
         "-d",
         service["context"]["server_name"]]
 
+    certbot_lock.acquire()
     try:
         rc = subprocess.call(command)
         assert rc == 0, "invalid return code {rc}".format(rc=rc)
         logging.info("certbot finished!")
+        certbot_lock.release()
         return True
     except Exception as e:
         logging.error("cannot run certbot: {e}".format(e=e))
+        certbot_lock.release()
         return False
 
 def save_config(template_name, service):
@@ -92,9 +98,11 @@ def setup_stage2(service):
 
     for domain in domains_http:
         domain["upstream"] = service["upstream"]
+        domain["headers"] = service["headers"]
 
     for domain in domains_https:
         domain["upstream"] = service["upstream"]
+        domain["headers"] = service["headers"]
         create_redirect = True
         
         for domain2 in domains_http:
@@ -107,7 +115,8 @@ def setup_stage2(service):
         domains_http.append({
             "location": domain["location"],
             "scheme": "http", 
-            "upstream": None})
+            "upstream": None,
+            "headers": {}})
 
     service["domains"] = domains_http + domains_https
     
@@ -117,7 +126,8 @@ def setup_stage2(service):
         context["servers"].append({
             "scheme": domain["scheme"],
             "server_name": domain["location"],
-            "proxy_pass": domain["upstream"]})
+            "proxy_pass": domain["upstream"],
+            "headers": domain["headers"]})
 
     service["context"] = context
     save_config("stage2.tpl", service)

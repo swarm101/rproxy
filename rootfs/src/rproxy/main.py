@@ -1,3 +1,4 @@
+import json
 import logging
 import threading
 import time
@@ -13,6 +14,7 @@ logging.basicConfig(level=logging.INFO)
 RPROXY_NAMESPACE = "io.github.swarm101.rproxy"
 RPROXY_UPSTREAM = "io.github.swarm101.rproxy.upstream"
 RPROXY_DOMAINS = "io.github.swarm101.rproxy.domains"
+RPROXY_HEADERS = "io.github.swarm101.rproxy.headers"
 DELAY = 5
 
 threads = []
@@ -53,11 +55,33 @@ def service_include(service):
     # validate upstream
     upstream = service["labels"].get(RPROXY_UPSTREAM, None)
     if not upstream:
-        logging.error("update {name} with upstream label!".format(
+        logging.error("update {name} without upstream label!".format(
             **service))
         return
 
     service["upstream"] = upstream.format(**service)
+
+    # validate headers
+    headers = service["labels"].get(RPROXY_HEADERS, "{}")
+    try:
+        headers = json.loads(headers)
+    except Exception as e:
+        logging.error("update {name} with problem on headers, use a valid json object!".format(
+            **service))
+        return
+
+    if type(headers) != dict:
+        logging.error("update {name} with problem on headers, header should be a object!".format(
+            **service))
+        return
+
+    for header in headers:
+        if type(headers[header]) != str:
+            logging.error("update {name} with problem on headers, just string content allowed!".format(
+                **service))
+            return
+
+    service["headers"] = headers
 
     # wait service be reachable
     time.sleep(DELAY)
