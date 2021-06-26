@@ -30,7 +30,7 @@ services:
         - rproxy
 
 volumes:
-    data:
+    rproxy_data:
 
 networks:
     rproxy:
