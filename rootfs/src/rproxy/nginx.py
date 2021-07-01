@@ -98,11 +98,11 @@ def setup_stage2(service):
 
     for domain in domains_http:
         domain["upstream"] = service["upstream"]
-        domain["headers"] = service["headers"]
+        domain["extra"] = service["extra"]
 
     for domain in domains_https:
         domain["upstream"] = service["upstream"]
-        domain["headers"] = service["headers"]
+        domain["extra"] = service["extra"]
         create_redirect = True
         
         for domain2 in domains_http:
@@ -116,7 +116,7 @@ def setup_stage2(service):
             "location": domain["location"],
             "scheme": "http", 
             "upstream": None,
-            "headers": {}})
+            "extra": {}})
 
     service["domains"] = domains_http + domains_https
     
@@ -127,7 +127,7 @@ def setup_stage2(service):
             "scheme": domain["scheme"],
             "server_name": domain["location"],
             "proxy_pass": domain["upstream"],
-            "headers": domain["headers"]})
+            "extra": domain["extra"]})
 
     service["context"] = context
     save_config("stage2.tpl", service)
