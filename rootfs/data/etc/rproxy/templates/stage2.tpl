@@ -13,9 +13,9 @@ server {
     ssl_dhparam           /etc/letsencrypt/ssl-dhparams.pem;
     
     location / {
-        {% if server.headers %}
-            {% for key, value in server.headers.items() %}
-        proxy_set_header  "{{key}}" "{{value}}";
+        {% if server.extra %}
+            {% for key, value in server.extra %}
+        {{key}}  {{value}};
             {% endfor %}
         {% endif %}
         proxy_pass        {{server.proxy_pass}};
@@ -29,9 +29,9 @@ server {
 
     {% if server.proxy_pass %}
     location / {
-        {% if server.headers %}
-            {% for key, value in server.headers.items() %}
-        proxy_set_header  "{{key}}" "{{value}}";
+        {% if server.extra %}
+            {% for key, value in server.extra %}
+        {{key}} {{value}};
             {% endfor %}
         {% endif %}
         proxy_pass        {{server.proxy_pass}};

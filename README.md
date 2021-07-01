@@ -60,6 +60,7 @@ services:
             labels:
                 io.github.swarm101.rproxy.domains: "https://site1.duckdns.org http://site2.duckdns.org."
                 io.github.swarm101.rproxy.upstream: "http://{name}:80"
+                io.github.swarm101.rproxy.extra: '[["proxy_http_version", "1.1"], ["proxy_set_header", "Upgrade $http_upgrade"], ["proxy_set_header", "Connection \"Upgrade\""], ["proxy_set_header", "Host $host"]]'
         networks:
         - rproxy
 
@@ -83,4 +84,8 @@ Informar um ou mais domínio com o protocol. Se o protocolo for https será gera
 **io.github.swarm101.rproxy.upstream**
 
 Informar a URL com protocol para onde o rproxy deve encaminhar as requisições para utilizar o nome do serviço passar {name}.
+
+**io.github.swarm101.rproxy.extra**
+
+Utilizar o formato json para informar um conjunto de parâmetros e valores para o nginx.
 

@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.INFO)
 RPROXY_NAMESPACE = "io.github.swarm101.rproxy"
 RPROXY_UPSTREAM = "io.github.swarm101.rproxy.upstream"
 RPROXY_DOMAINS = "io.github.swarm101.rproxy.domains"
-RPROXY_HEADERS = "io.github.swarm101.rproxy.headers"
+RPROXY_EXTRA = "io.github.swarm101.rproxy.extra"
 DELAY = 5
 
 threads = []
@@ -61,27 +61,16 @@ def service_include(service):
 
     service["upstream"] = upstream.format(**service)
 
-    # validate headers
-    headers = service["labels"].get(RPROXY_HEADERS, "{}")
+    # validate extra
+    extra = service["labels"].get(RPROXY_EXTRA, "{}")
     try:
-        headers = json.loads(headers)
+        extra = json.loads(extra)
     except Exception as e:
-        logging.error("update {name} with problem on headers, use a valid json object!".format(
+        logging.error("update {name} with problem on extra, use a valid json object!".format(
             **service))
         return
 
-    if type(headers) != dict:
-        logging.error("update {name} with problem on headers, header should be a object!".format(
-            **service))
-        return
-
-    for header in headers:
-        if type(headers[header]) != str:
-            logging.error("update {name} with problem on headers, just string content allowed!".format(
-                **service))
-            return
-
-    service["headers"] = headers
+    service["extra"] = extra
 
     # wait service be reachable
     time.sleep(DELAY)
